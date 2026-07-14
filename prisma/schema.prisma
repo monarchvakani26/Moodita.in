@@ -1,0 +1,504 @@
+// This is your Prisma schema file for Moodita.
+// Learn more at https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ── Auth ────────────────────────────────────────────────────────────
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?   // hashed, for credential login
+  role          UserRole  @default(USER)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts      Account[]
+  sessions      Session[]
+  comments      Comment[]
+  orders        Order[]
+  wishlist      WishlistItem[]
+  bookmarks     Bookmark[]
+  newsletter    NewsletterSubscriber?
+
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+enum UserRole {
+  USER
+  ADMIN
+  SUPER_ADMIN
+}
+
+// ── Blog / Journal ──────────────────────────────────────────────────
+
+model Post {
+  id          String      @id @default(cuid())
+  slug        String      @unique
+  title       String
+  excerpt     String      @db.Text
+  content     String      @db.Text  // MDX or rich text
+  coverImage  String?
+  readingTime Int?        // minutes
+  published   Boolean     @default(false)
+  featured    Boolean     @default(false)
+  publishedAt DateTime?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  // Relations
+  categories  PostCategory[]
+  tags        PostTag[]
+  comments    Comment[]
+
+  @@map("posts")
+}
+
+model Category {
+  id          String        @id @default(cuid())
+  name        String        @unique
+  slug        String        @unique
+  description String?
+  color       String?       // CSS colour token name
+  icon        String?
+  order       Int           @default(0)
+
+  posts        PostCategory[]
+  artworks     ArtworkCategory[]
+  recipes      RecipeCategory[]
+  writings     WritingCategory[]
+
+  @@map("categories")
+}
+
+model Tag {
+  id    String    @id @default(cuid())
+  name  String    @unique
+  slug  String    @unique
+
+  posts PostTag[]
+
+  @@map("tags")
+}
+
+model PostCategory {
+  postId     String
+  categoryId String
+
+  post     Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([postId, categoryId])
+  @@map("post_categories")
+}
+
+model PostTag {
+  postId String
+  tagId  String
+
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  tag  Tag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([postId, tagId])
+  @@map("post_tags")
+}
+
+// ── Gallery / Artwork ───────────────────────────────────────────────
+
+model Artwork {
+  id           String    @id @default(cuid())
+  slug         String    @unique
+  title        String
+  description  String    @db.Text
+  story        String?   @db.Text  // the artist's story behind the piece
+  medium       String?   // e.g. "Oil on canvas"
+  dimensions   String?   // e.g. "60 × 80 cm"
+  year         Int?
+  available    Boolean   @default(true)
+  featured     Boolean   @default(false)
+  coverImage   String    // Cloudinary URL
+  images       String[]  // array of Cloudinary URLs
+  published    Boolean   @default(false)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  categories   ArtworkCategory[]
+  products     Product[]  // an artwork can be sold as a product
+
+  @@map("artworks")
+}
+
+model ArtworkCategory {
+  artworkId  String
+  categoryId String
+
+  artwork  Artwork  @relation(fields: [artworkId], references: [id], onDelete: Cascade)
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([artworkId, categoryId])
+  @@map("artwork_categories")
+}
+
+// ── Shop / Products ─────────────────────────────────────────────────
+
+model Product {
+  id           String        @id @default(cuid())
+  slug         String        @unique
+  title        String
+  description  String        @db.Text
+  price        Float
+  comparePrice Float?        // original price (for discounts)
+  images       String[]
+  type         ProductType
+  digital      Boolean       @default(false)
+  fileUrl      String?       // for digital downloads
+  stock        Int?          // null = unlimited
+  lowStockAt   Int?          @default(5)
+  published    Boolean       @default(false)
+  featured     Boolean       @default(false)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  // Optional link to original artwork
+  artworkId    String?
+  artwork      Artwork?      @relation(fields: [artworkId], references: [id])
+
+  variants     ProductVariant[]
+  orderItems   OrderItem[]
+  reviews      Review[]
+  wishlistItems WishlistItem[]
+
+  @@map("products")
+}
+
+model ProductVariant {
+  id        String  @id @default(cuid())
+  productId String
+  name      String  // e.g. "A4 Print"
+  price     Float
+  stock     Int?
+  sku       String?
+
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@map("product_variants")
+}
+
+enum ProductType {
+  ORIGINAL_PAINTING
+  PRINT
+  SKETCH
+  POSTER
+  ART_CARD
+  BOOKMARK
+  DIGITAL_DOWNLOAD
+  RECIPE_EBOOK
+  MERCHANDISE
+}
+
+// ── Orders ──────────────────────────────────────────────────────────
+
+model Order {
+  id              String      @id @default(cuid())
+  orderNumber     String      @unique @default(cuid())
+  userId          String?
+  email           String
+  status          OrderStatus @default(PENDING)
+  total           Float
+  subtotal        Float
+  shippingCost    Float       @default(0)
+  discount        Float       @default(0)
+  couponCode      String?
+  currency        String      @default("INR")
+  paymentGateway  String?
+  paymentIntentId String?
+  paidAt          DateTime?
+  shippingAddress Json?
+  notes           String?     @db.Text
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  user     User?       @relation(fields: [userId], references: [id])
+  items    OrderItem[]
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id        String  @id @default(cuid())
+  orderId   String
+  productId String
+  quantity  Int
+  price     Float
+  variantId String?
+
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id])
+
+  @@map("order_items")
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+model Coupon {
+  id          String     @id @default(cuid())
+  code        String     @unique
+  type        CouponType
+  value       Float      // percentage or fixed amount
+  minOrder    Float?
+  maxUses     Int?
+  usedCount   Int        @default(0)
+  expiresAt   DateTime?
+  active      Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+
+  @@map("coupons")
+}
+
+enum CouponType {
+  PERCENTAGE
+  FIXED
+}
+
+// ── Reviews ─────────────────────────────────────────────────────────
+
+model Review {
+  id        String   @id @default(cuid())
+  productId String
+  name      String
+  email     String
+  rating    Int      // 1–5
+  comment   String   @db.Text
+  approved  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@map("reviews")
+}
+
+// ── Comments ─────────────────────────────────────────────────────────
+
+model Comment {
+  id        String   @id @default(cuid())
+  postId    String
+  userId    String?
+  name      String
+  email     String
+  content   String   @db.Text
+  approved  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  post Post  @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User? @relation(fields: [userId], references: [id])
+
+  @@map("comments")
+}
+
+// ── Wishlist & Bookmarks ─────────────────────────────────────────────
+
+model WishlistItem {
+  id        String   @id @default(cuid())
+  userId    String
+  productId String
+  addedAt   DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+  @@map("wishlist_items")
+}
+
+model Bookmark {
+  id        String   @id @default(cuid())
+  userId    String
+  postId    String
+  savedAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, postId])
+  @@map("bookmarks")
+}
+
+// ── Recipes (Food Journal) ───────────────────────────────────────────
+
+model Recipe {
+  id           String   @id @default(cuid())
+  slug         String   @unique
+  title        String
+  description  String   @db.Text
+  story        String?  @db.Text  // personal notes
+  coverImage   String?
+  images       String[]
+  prepTime     Int?     // minutes
+  cookTime     Int?     // minutes
+  servings     Int?
+  difficulty   RecipeDifficulty @default(EASY)
+  ingredients  Json     // [{name, amount, unit, note}]
+  steps        Json     // [{step, description, image?}]
+  tags         String[]
+  published    Boolean  @default(false)
+  featured     Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  categories   RecipeCategory[]
+
+  @@map("recipes")
+}
+
+model RecipeCategory {
+  recipeId   String
+  categoryId String
+
+  recipe   Recipe   @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([recipeId, categoryId])
+  @@map("recipe_categories")
+}
+
+enum RecipeDifficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+// ── Travel Journal ───────────────────────────────────────────────────
+
+model TravelEntry {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  title       String
+  location    String
+  country     String
+  lat         Float?
+  lng         Float?
+  description String   @db.Text
+  content     String   @db.Text
+  coverImage  String?
+  images      String[]
+  visitedAt   DateTime?
+  published   Boolean  @default(false)
+  featured    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("travel_entries")
+}
+
+// ── Writing (Poems / Letters / Essays) ──────────────────────────────
+
+model WritingPiece {
+  id          String      @id @default(cuid())
+  slug        String      @unique
+  title       String
+  type        WritingType
+  excerpt     String?     @db.Text
+  content     String      @db.Text
+  coverImage  String?
+  published   Boolean     @default(false)
+  featured    Boolean     @default(false)
+  publishedAt DateTime?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  categories  WritingCategory[]
+
+  @@map("writing_pieces")
+}
+
+model WritingCategory {
+  writingId  String
+  categoryId String
+
+  writing  WritingPiece @relation(fields: [writingId], references: [id], onDelete: Cascade)
+  category Category     @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([writingId, categoryId])
+  @@map("writing_categories")
+}
+
+enum WritingType {
+  POEM
+  LETTER
+  ESSAY
+  THOUGHT
+  STORY
+}
+
+// ── Newsletter ───────────────────────────────────────────────────────
+
+model NewsletterSubscriber {
+  id          String    @id @default(cuid())
+  email       String    @unique
+  name        String?
+  confirmed   Boolean   @default(false)
+  token       String?   @unique
+  subscribedAt DateTime @default(now())
+  userId      String?   @unique
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@map("newsletter_subscribers")
+}
