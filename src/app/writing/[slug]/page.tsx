@@ -3,6 +3,9 @@ import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { ArrowLeft } from 'lucide-react'
 import { formatDate } from '@/lib/utils'
+import { siteConfig } from '@/lib/site-config'
+import { buildOpenGraph, buildTwitterCard } from '@/lib/seo'
+import { getBreadcrumbSchema, getArticleSchema } from '@/lib/schema'
 
 const WRITINGS: Record<string, {
   slug: string
@@ -11,6 +14,7 @@ const WRITINGS: Record<string, {
   typeLabel: string
   content: string
   publishedAt: Date
+  excerpt?: string
 }> = {
   'the-color-of-tuesday': {
     slug: 'the-color-of-tuesday',
@@ -155,9 +159,27 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
   const piece = WRITINGS[slug]
   if (!piece) return { title: 'Not Found' }
+
+  const title = `${piece.title} | Moodita`
+  const description = piece.excerpt || piece.content.split('\n')[0] || piece.title
+  const path = `/writing/${slug}`
+
   return {
-    title: `${piece.title} — ${piece.typeLabel}`,
-    description: `${piece.typeLabel} by Niomi — ${piece.title}`,
+    title,
+    description,
+    alternates: {
+      canonical: path,
+    },
+    openGraph: buildOpenGraph({
+      title,
+      description,
+      path,
+      type: 'article',
+    }),
+    twitter: buildTwitterCard({
+      title,
+      description,
+    }),
   }
 }
 
@@ -220,10 +242,38 @@ export default async function WritingPage({ params }: Props) {
           {/* Author */}
           <div className="mt-16 pt-8 border-t border-border">
             <p className="font-sans text-xs text-ink-muted">Written by</p>
-            <p className="font-display text-lg text-ink mt-0.5">Niomi</p>
+            <p className="font-display text-lg text-ink mt-0.5">Niomi Gada</p>
           </div>
         </div>
       </div>
+
+      {/* Structured Schemas */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(
+            getBreadcrumbSchema([
+              { name: 'Home', path: '/' },
+              { name: 'Writing', path: '/writing' },
+              { name: piece.title, path: `/writing/${piece.slug}` },
+            ])
+          ),
+        }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(
+            getArticleSchema({
+              headline: piece.title,
+              description: piece.excerpt || 'Poem or letter by Niomi Gada',
+              image: `${siteConfig.domain}/og-image.jpg`,
+              datePublished: piece.publishedAt,
+              path: `/writing/${piece.slug}`,
+            })
+          ),
+        }}
+      />
     </article>
   )
 }

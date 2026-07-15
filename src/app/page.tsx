@@ -6,10 +6,14 @@ import { GalleryPreview } from '@/components/sections/GalleryPreview'
 import { LatestJournal } from '@/components/sections/LatestJournal'
 import { NewsletterCTA } from '@/components/sections/NewsletterCTA'
 
+import { siteConfig } from '@/lib/site-config'
+
 export const metadata: Metadata = {
-  title: 'Moodita by Niomi — Kindness Above Everything',
-  description:
-    'A digital home for Niomi — advocate, artist, writer, foodie, traveller, and storyteller. Art gallery, journal, recipes, travel diary, and original artwork for sale.',
+  title: `Moodita | Art, Writing & Creativity by Niomi Gada`,
+  description: siteConfig.description,
+  alternates: {
+    canonical: '/',
+  },
 }
 
 /**

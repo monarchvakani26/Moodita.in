@@ -20,7 +20,7 @@ export default function NotFound() {
         This page wandered off.
       </h1>
       <p className="font-sans text-sm text-ink-muted leading-relaxed max-w-sm mb-10">
-        Like Niomi on a quiet Tuesday — it might have gone somewhere more interesting. 
+        Like Niomi Gada on a quiet Tuesday — it might have gone somewhere more interesting. 
         Let&apos;s find you a better destination.
       </p>
 

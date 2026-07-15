@@ -3,10 +3,15 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { RevealText } from '@/components/primitives/RevealText'
 import { MapPin, ArrowUpRight } from 'lucide-react'
+import { siteConfig } from '@/lib/site-config'
+import { getBreadcrumbSchema } from '@/lib/schema'
 
 export const metadata: Metadata = {
-  title: 'Travel Diary',
-  description: 'Niomi\'s travel diary — places visited, photo stories, and reflections from the road.',
+  title: 'Travel Diary | Moodita',
+  description: 'Niomi Gada\'s travel diary — places visited, photo stories, and reflections from the road.',
+  alternates: {
+    canonical: '/travel',
+  },
 }
 
 const TRAVEL_ENTRIES = [
@@ -162,6 +167,19 @@ export default function TravelPage() {
           </div>
         </div>
       </div>
+
+      {/* Structured Breadcrumbs Schema */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(
+            getBreadcrumbSchema([
+              { name: 'Home', path: '/' },
+              { name: 'Travel', path: '/travel' },
+            ])
+          ),
+        }}
+      />
     </div>
   )
 }

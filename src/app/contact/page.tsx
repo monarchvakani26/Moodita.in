@@ -3,10 +3,15 @@ import Link from 'next/link'
 import { RevealText } from '@/components/primitives/RevealText'
 import { MagneticButton } from '@/components/primitives/MagneticButton'
 import { Instagram, Mail, Linkedin, Send } from 'lucide-react'
+import { siteConfig } from '@/lib/site-config'
+import { getBreadcrumbSchema } from '@/lib/schema'
 
 export const metadata: Metadata = {
-  title: 'Contact',
-  description: 'Get in touch with Niomi — collaborations, commissions, speaking, or just a hello.',
+  title: 'Contact | Moodita',
+  description: 'Get in touch with Niomi Gada — collaborations, commissions, speaking, or just a hello.',
+  alternates: {
+    canonical: '/contact',
+  },
 }
 
 export default function ContactPage() {
@@ -26,7 +31,7 @@ export default function ContactPage() {
           </RevealText>
           <RevealText delay={0.2}>
             <p className="font-sans text-fluid-base text-ink-muted leading-relaxed">
-              For collaborations, commissions, speaking engagements, or just a warm hello — Niomi reads every message personally.
+              For collaborations, commissions, speaking engagements, or just a warm hello — Niomi Gada reads every message personally.
             </p>
           </RevealText>
         </div>
@@ -147,6 +152,19 @@ export default function ContactPage() {
           </div>
         </div>
       </div>
+
+      {/* Structured Breadcrumbs Schema */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(
+            getBreadcrumbSchema([
+              { name: 'Home', path: '/' },
+              { name: 'Contact', path: '/contact' },
+            ])
+          ),
+        }}
+      />
     </div>
   )
 }

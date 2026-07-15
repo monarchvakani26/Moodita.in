@@ -4,11 +4,15 @@ import Link from 'next/link'
 import { RevealText, RevealImage } from '@/components/primitives/RevealText'
 import { NewsletterCTA } from '@/components/sections/NewsletterCTA'
 import { ArrowUpRight } from 'lucide-react'
+import { siteConfig } from '@/lib/site-config'
+import { getBreadcrumbSchema } from '@/lib/schema'
 
 export const metadata: Metadata = {
-  title: 'About Niomi',
-  description:
-    'Advocate by profession, artist by passion, and storyteller by heart. Learn the story behind Moodita.',
+  title: 'About Niomi Gada | Moodita',
+  description: 'Advocate by profession, artist by passion, and storyteller by heart. Learn the story behind Moodita.',
+  alternates: {
+    canonical: '/about',
+  },
 }
 
 const TIMELINE = [
@@ -200,7 +204,7 @@ export default function AboutPage() {
       <div className="section-padding py-20 bg-paper border-t border-border">
         <div className="page-container flex flex-col md:flex-row items-center justify-between gap-8">
           <div>
-            <h2 className="font-display text-fluid-2xl text-ink mb-2">Explore Niomi&apos;s world.</h2>
+            <h2 className="font-display text-fluid-2xl text-ink mb-2">Explore Niomi Gada&apos;s world.</h2>
             <p className="font-sans text-sm text-ink-muted">Start anywhere — every door leads somewhere beautiful.</p>
           </div>
           <div className="flex flex-wrap gap-3">
@@ -221,6 +225,19 @@ export default function AboutPage() {
           </div>
         </div>
       </div>
+
+      {/* Structured Breadcrumbs Schema */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(
+            getBreadcrumbSchema([
+              { name: 'Home', path: '/' },
+              { name: 'About', path: '/about' },
+            ])
+          ),
+        }}
+      />
 
       {/* Newsletter */}
       <NewsletterCTA />

@@ -5,11 +5,15 @@ import { RevealText } from '@/components/primitives/RevealText'
 import { ArrowUpRight } from 'lucide-react'
 import { CardHoverReveal } from '@/components/primitives/CardHoverReveal'
 import { MotionLink } from '@/components/primitives/MotionLink'
+import { siteConfig } from '@/lib/site-config'
+import { getBreadcrumbSchema } from '@/lib/schema'
 
 export const metadata: Metadata = {
-  title: 'Creative Gallery',
-  description:
-    'Original paintings, illustrations, sketches, and photography by Niomi. Browse the creative gallery.',
+  title: 'Gallery | Moodita',
+  description: 'Original paintings, illustrations, sketches, and photography by Niomi Gada. Browse the creative gallery.',
+  alternates: {
+    canonical: '/gallery',
+  },
 }
 
 const FILTER_CATEGORIES = ['All', 'Paintings', 'Illustrations', 'Sketches', 'Photography', 'Nature', 'Food']
@@ -95,7 +99,7 @@ export default function GalleryPage() {
                   >
                     <Image
                       src={artwork.image}
-                      alt={`${artwork.title} — ${artwork.medium} by Niomi`}
+                      alt={`${artwork.title} — ${artwork.medium} by Niomi Gada`}
                       fill
                       className="object-cover transition-transform duration-700 group-hover:scale-105"
                       sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
@@ -120,6 +124,19 @@ export default function GalleryPage() {
           </div>
         </div>
       </div>
+
+      {/* Structured Breadcrumbs Schema */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(
+            getBreadcrumbSchema([
+              { name: 'Home', path: '/' },
+              { name: 'Gallery', path: '/gallery' },
+            ])
+          ),
+        }}
+      />
     </div>
   )
 }

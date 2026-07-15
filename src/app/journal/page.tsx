@@ -4,11 +4,15 @@ import Image from 'next/image'
 import { RevealText } from '@/components/primitives/RevealText'
 import { ArrowUpRight, Clock, Search } from 'lucide-react'
 import { formatDate } from '@/lib/utils'
+import { siteConfig } from '@/lib/site-config'
+import { getBreadcrumbSchema } from '@/lib/schema'
 
 export const metadata: Metadata = {
-  title: 'Journal',
-  description:
-    'Niomi\'s personal journal — essays on law, life, art, travel, food, and creativity. Premium reading experience.',
+  title: 'Journal | Moodita',
+  description: 'Niomi Gada\'s personal journal — essays on law, life, art, travel, food, and creativity.',
+  alternates: {
+    canonical: '/journal',
+  },
 }
 
 const CATEGORIES = ['All', 'Legal', 'Lifestyle', 'Personal', 'Food', 'Travel', 'Art', 'Creativity', 'Journal']
@@ -191,6 +195,19 @@ export default function JournalPage() {
           </div>
         </div>
       </div>
+
+      {/* Structured Breadcrumbs Schema */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(
+            getBreadcrumbSchema([
+              { name: 'Home', path: '/' },
+              { name: 'Journal', path: '/journal' },
+            ])
+          ),
+        }}
+      />
     </div>
   )
 }

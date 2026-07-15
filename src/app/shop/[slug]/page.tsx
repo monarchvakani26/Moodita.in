@@ -4,6 +4,9 @@ import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { ArrowLeft, ShoppingBag, Heart, Star } from 'lucide-react'
 import { formatCurrency } from '@/lib/utils'
+import { siteConfig } from '@/lib/site-config'
+import { buildOpenGraph, buildTwitterCard } from '@/lib/seo'
+import { getBreadcrumbSchema, getProductSchema } from '@/lib/schema'
 
 const PRODUCTS: Record<string, {
   slug: string
@@ -98,7 +101,7 @@ const PRODUCTS: Record<string, {
     title: 'Kindness Bookmark Set (3pc)',
     typeLabel: 'Stationery',
     price: 399,
-    description: 'Set of 3 double-sided bookmarks printed on 350gsm silk board. Each features a different quote from Niomi\'s writing.',
+    description: 'Set of 3 double-sided bookmarks printed on 350gsm silk board. Each features a different quote from Niomi Gada\'s writing.',
     story: 'For the readers. For the ones who underline sentences. For the ones who need a reminder that kindness is not weakness.',
     images: ['https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=1200&q=85'],
     available: true,
@@ -114,12 +117,29 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
   const product = PRODUCTS[slug]
   if (!product) return { title: 'Not Found' }
+
+  const title = `${product.title} | Moodita Shop`
+  const description = product.description
+  const path = `/shop/${slug}`
+
   return {
-    title: product.title,
-    description: product.description,
-    openGraph: {
-      images: [{ url: product.images[0], width: 1200, height: 900 }],
+    title,
+    description,
+    alternates: {
+      canonical: path,
     },
+    openGraph: buildOpenGraph({
+      title,
+      description,
+      path,
+      type: 'website',
+      imageUrl: product.images[0],
+    }),
+    twitter: buildTwitterCard({
+      title,
+      description,
+      imageUrl: product.images[0],
+    }),
   }
 }
 
@@ -227,7 +247,7 @@ export default async function ProductPage({ params }: Props) {
               {/* Trust signals */}
               <div className="grid grid-cols-2 gap-3 pt-2">
                 {[
-                  '✓ Hand-signed by Niomi',
+                  '✓ Hand-signed by Niomi Gada',
                   '✓ Certificate of authenticity',
                   '✓ Carefully packed for shipping',
                   '✓ Returns within 7 days',
@@ -239,6 +259,36 @@ export default async function ProductPage({ params }: Props) {
           </div>
         </div>
       </div>
+
+      {/* Structured Schemas */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(
+            getBreadcrumbSchema([
+              { name: 'Home', path: '/' },
+              { name: 'Shop', path: '/shop' },
+              { name: product.title, path: `/shop/${product.slug}` },
+            ])
+          ),
+        }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(
+            getProductSchema({
+              name: product.title,
+              image: product.images[0],
+              description: product.description,
+              sku: `SHOP-${product.slug.toUpperCase()}`,
+              price: product.price,
+              availability: product.available ? 'InStock' : 'OutOfStock',
+              path: `/shop/${product.slug}`,
+            })
+          ),
+        }}
+      />
     </article>
   )
 }

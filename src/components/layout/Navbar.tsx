@@ -4,9 +4,10 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ShoppingBag, Menu, X } from 'lucide-react'
+import { ShoppingBag, Menu, X, Search } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Logo } from '@/components/primitives/Logo'
+import { SearchModal } from '@/components/layout/SearchModal'
 
 const NAV_LINKS = [
   { label: 'About', href: '/about' },
@@ -21,6 +22,7 @@ const NAV_LINKS = [
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [searchOpen, setSearchOpen] = useState(false)
   const pathname = usePathname()
 
   useEffect(() => {
@@ -73,6 +75,15 @@ export function Navbar() {
 
           {/* Right actions */}
           <div className="flex items-center gap-4">
+            {/* Search Trigger */}
+            <button
+              onClick={() => setSearchOpen(true)}
+              className="p-2 text-ink-soft hover:text-terracotta transition-colors duration-200"
+              aria-label="Open search"
+            >
+              <Search size={20} strokeWidth={1.5} />
+            </button>
+
             <Link
               href="/shop/cart"
               className="relative p-2 text-ink-soft hover:text-terracotta transition-colors duration-200"
@@ -150,6 +161,9 @@ export function Navbar() {
 
       {/* Mobile Bottom Nav (iOS-feel) */}
       <BottomNav pathname={pathname} />
+
+      {/* Search Modal Overlay */}
+      <SearchModal isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
     </>
   )
 }

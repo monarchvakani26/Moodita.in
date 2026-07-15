@@ -6,11 +6,15 @@ import { Heart, ShoppingBag, ArrowUpRight } from 'lucide-react'
 import { formatCurrency } from '@/lib/utils'
 import { CardHoverReveal } from '@/components/primitives/CardHoverReveal'
 import { MotionLink } from '@/components/primitives/MotionLink'
+import { siteConfig } from '@/lib/site-config'
+import { getBreadcrumbSchema } from '@/lib/schema'
 
 export const metadata: Metadata = {
-  title: 'The Shop',
-  description:
-    'Original paintings, prints, art cards, digital downloads, and merchandise by Niomi. Own a piece of her world.',
+  title: 'Shop | Moodita',
+  description: 'Original paintings, prints, art cards, digital downloads, and merchandise by Niomi Gada. Own a piece of her world.',
+  alternates: {
+    canonical: '/shop',
+  },
 }
 
 const PRODUCT_TYPES = ['All', 'Originals', 'Prints', 'Sketches', 'Art Cards', 'Digital', 'Merch']
@@ -152,6 +156,19 @@ export default function ShopPage() {
           </div>
         </div>
       </div>
+
+      {/* Structured Breadcrumbs Schema */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(
+            getBreadcrumbSchema([
+              { name: 'Home', path: '/' },
+              { name: 'Shop', path: '/shop' },
+            ])
+          ),
+        }}
+      />
     </div>
   )
 }

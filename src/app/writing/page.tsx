@@ -2,11 +2,15 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { RevealText } from '@/components/primitives/RevealText'
 import { ArrowUpRight } from 'lucide-react'
+import { siteConfig } from '@/lib/site-config'
+import { getBreadcrumbSchema } from '@/lib/schema'
 
 export const metadata: Metadata = {
-  title: 'Writing',
-  description:
-    'Poems, letters, essays, and quiet thoughts by Niomi. A collection of words written from the heart.',
+  title: 'Writing | Moodita',
+  description: 'Poems, letters, essays, and quiet thoughts by Niomi Gada. A collection of words written from the heart.',
+  alternates: {
+    canonical: '/writing',
+  },
 }
 
 const WRITING_TYPES = ['All', 'Poems', 'Letters', 'Essays', 'Thoughts']
@@ -143,6 +147,19 @@ export default function WritingPage() {
           </div>
         </div>
       </div>
+
+      {/* Structured Breadcrumbs Schema */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(
+            getBreadcrumbSchema([
+              { name: 'Home', path: '/' },
+              { name: 'Writing', path: '/writing' },
+            ])
+          ),
+        }}
+      />
     </div>
   )
 }

@@ -1,13 +1,15 @@
-import type { Metadata } from 'next'
-import { Playfair_Display, Cormorant_Garamond, Inter } from 'next/font/google'
-import { Navbar } from '@/components/layout/Navbar'
-import { Footer } from '@/components/layout/Footer'
-import { LenisProvider } from '@/providers/LenisProvider'
-import { QueryProvider } from '@/providers/QueryProvider'
-import { PageTransition } from '@/components/primitives/PageTransition'
-import { GlobalSvgMasks } from '@/components/primitives/GlobalSvgMasks'
+import type { Metadata, Viewport } from 'next';
+import { Playfair_Display, Cormorant_Garamond, Inter } from 'next/font/google';
+import { Navbar } from '@/components/layout/Navbar';
+import { Footer } from '@/components/layout/Footer';
+import { LenisProvider } from '@/providers/LenisProvider';
+import { QueryProvider } from '@/providers/QueryProvider';
+import { PageTransition } from '@/components/primitives/PageTransition';
+import { GlobalSvgMasks } from '@/components/primitives/GlobalSvgMasks';
+import { siteConfig } from '@/lib/site-config';
+import { getPersonSchema, getWebsiteSchema } from '@/lib/schema';
 
-import './globals.css'
+import './globals.css';
 
 // ── Google Fonts ───────────────────────────────────────────────────────────────
 const playfairDisplay = Playfair_Display({
@@ -15,7 +17,7 @@ const playfairDisplay = Playfair_Display({
   variable: '--font-playfair',
   display: 'swap',
   weight: ['400', '500', '600', '700'],
-})
+});
 
 const cormorantGaramond = Cormorant_Garamond({
   subsets: ['latin'],
@@ -23,28 +25,32 @@ const cormorantGaramond = Cormorant_Garamond({
   display: 'swap',
   weight: ['300', '400', '500', '600'],
   style: ['normal', 'italic'],
-})
+});
 
 const inter = Inter({
   subsets: ['latin'],
   variable: '--font-inter',
   display: 'swap',
-})
+});
+
+// ── Viewport Config (Next.js 15 Convention) ────────────────────────────────────
+export const viewport: Viewport = {
+  themeColor: siteConfig.themeColor,
+  width: 'device-width',
+  initialScale: 1,
+};
 
 // ── Root Metadata ──────────────────────────────────────────────────────────────
 export const metadata: Metadata = {
-  metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL ?? 'https://moodita.in'
-  ),
+  metadataBase: new URL(siteConfig.domain),
   title: {
-    default: 'Moodita by Niomi — Kindness Above Everything',
-    template: '%s | Moodita by Niomi',
+    default: `${siteConfig.name} | Art, Writing & Creativity by Niomi Gada`,
+    template: `%s | ${siteConfig.name}`,
   },
-  description:
-    'A digital home for Niomi — advocate, artist, writer, foodie, traveller, and storyteller. Art gallery, journal, recipes, travel diary, and original artwork for sale.',
+  description: siteConfig.description,
   keywords: [
-    'Moodita',
-    'Niomi',
+    siteConfig.name,
+    siteConfig.owner,
     'advocate',
     'artist',
     'writer',
@@ -54,44 +60,58 @@ export const metadata: Metadata = {
     'paintings',
     'kindness above everything',
   ],
-  authors: [{ name: 'Niomi' }],
-  creator: 'Niomi',
+  authors: [{ name: siteConfig.owner }],
+  creator: siteConfig.owner,
+  publisher: siteConfig.owner,
+  category: 'Portfolio',
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+  alternates: {
+    canonical: '/',
+  },
   openGraph: {
     type: 'website',
-    locale: 'en_IN',
+    locale: siteConfig.locale,
     url: '/',
-    siteName: 'Moodita by Niomi',
-    title: 'Moodita by Niomi — Kindness Above Everything',
-    description:
-      'A digital home for Niomi — advocate, artist, writer, foodie, traveller, and storyteller.',
+    siteName: siteConfig.name,
+    title: `${siteConfig.name} | Art, Writing & Creativity by Niomi Gada`,
+    description: siteConfig.description,
     images: [
       {
-        url: '/og-image.jpg',
+        url: '/opengraph-image.png',
         width: 1200,
         height: 630,
-        alt: 'Moodita by Niomi',
+        alt: `${siteConfig.name} by ${siteConfig.owner}`,
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Moodita by Niomi',
-    description: 'Kindness Above Everything',
-    images: ['/og-image.jpg'],
+    title: `${siteConfig.name} | ${siteConfig.owner}`,
+    description: siteConfig.tagline,
+    images: ['/opengraph-image.png'],
   },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: { index: true, follow: true },
-  },
-}
+  manifest: '/manifest.webmanifest',
+};
 
 // ── Root Layout ────────────────────────────────────────────────────────────────
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
+  const personSchema = getPersonSchema();
+  const websiteSchema = getWebsiteSchema();
+
   return (
     <html
       lang="en"
@@ -102,11 +122,19 @@ export default function RootLayout({
         {/* Preconnect to Google Fonts */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        {/* Favicon */}
+        {/* Favicons (Next.js automatically falls back to file-based icon exports, but link tags guarantee compatibility) */}
         <link rel="icon" href="/favicon.ico" sizes="any" />
-        <link rel="icon" href="/icon.svg" type="image/svg+xml" />
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-        <meta name="theme-color" content="#FAF7F2" />
+        <link rel="apple-touch-icon" href="/apple-icon.png" />
+        
+        {/* Structured Schema Injections */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(personSchema) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
+        />
       </head>
       <body className="grain-overlay min-h-screen bg-cream">
         <QueryProvider>
@@ -127,10 +155,10 @@ export default function RootLayout({
 
             <Footer />
             <GlobalSvgMasks />
-
           </LenisProvider>
         </QueryProvider>
       </body>
     </html>
-  )
+  );
 }
+

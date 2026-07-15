@@ -1,8 +1,7 @@
-import type { MetadataRoute } from 'next'
+import type { MetadataRoute } from 'next';
+import { siteConfig } from '@/lib/site-config';
 
 export default function robots(): MetadataRoute.Robots {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://moodita.in'
-
   return {
     rules: [
       {
@@ -11,6 +10,6 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ['/admin', '/api', '/shop/cart', '/shop/checkout'],
       },
     ],
-    sitemap: `${siteUrl}/sitemap.xml`,
-  }
+    sitemap: `${siteConfig.domain}/sitemap.xml`,
+  };
 }

@@ -34,7 +34,7 @@ export function NewsletterCTA() {
               className="font-display text-fluid-3xl text-cream leading-tight tracking-tight mb-6"
             >
               Receive letters<br />
-              <span className="text-terracotta-light italic">from Niomi.</span>
+              <span className="text-terracotta-light italic">from Niomi Gada.</span>
             </h2>
           </RevealText>
 

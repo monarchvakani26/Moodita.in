@@ -4,6 +4,9 @@ import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { ArrowLeft, Clock } from 'lucide-react'
 import { formatDate } from '@/lib/utils'
+import { siteConfig } from '@/lib/site-config'
+import { buildOpenGraph, buildTwitterCard } from '@/lib/seo'
+import { getBreadcrumbSchema } from '@/lib/schema'
 
 const RECIPES: Record<string, {
   slug: string
@@ -151,10 +154,29 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
   const recipe = RECIPES[slug]
   if (!recipe) return { title: 'Not Found' }
+
+  const title = `${recipe.title} | Food Journal`
+  const description = recipe.description
+  const path = `/food/${slug}`
+
   return {
-    title: recipe.title,
-    description: recipe.description,
-    openGraph: { images: [{ url: recipe.image, width: 1400, height: 900 }] },
+    title,
+    description,
+    alternates: {
+      canonical: path,
+    },
+    openGraph: buildOpenGraph({
+      title,
+      description,
+      path,
+      type: 'article',
+      imageUrl: recipe.image,
+    }),
+    twitter: buildTwitterCard({
+      title,
+      description,
+      imageUrl: recipe.image,
+    }),
   }
 }
 
@@ -237,6 +259,20 @@ export default async function RecipePage({ params }: Props) {
           </section>
         </div>
       </div>
+
+      {/* Structured Schemas */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(
+            getBreadcrumbSchema([
+              { name: 'Home', path: '/' },
+              { name: 'Food', path: '/food' },
+              { name: recipe.title, path: `/food/${recipe.slug}` },
+            ])
+          ),
+        }}
+      />
     </article>
   )
 }

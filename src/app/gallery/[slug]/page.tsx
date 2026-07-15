@@ -161,6 +161,10 @@ const ARTWORKS: Record<string, {
 }
 
 
+import { siteConfig } from '@/lib/site-config'
+import { buildOpenGraph, buildTwitterCard } from '@/lib/seo'
+import { getBreadcrumbSchema, getProductSchema } from '@/lib/schema'
+
 interface Props {
   params: Promise<{ slug: string }>
 }
@@ -169,14 +173,31 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
   const art = ARTWORKS[slug]
   if (!art) return { title: 'Not Found' }
+  
+  const title = `${art.title} | Moodita Gallery`
+  const description = art.description
+  const path = `/gallery/${slug}`
+  
   return {
-    title: `${art.title} — ${art.medium}`,
-    description: art.description,
-    openGraph: {
-      images: [{ url: art.images[0], width: 1200, height: 900 }],
+    title,
+    description,
+    alternates: {
+      canonical: path,
     },
+    openGraph: buildOpenGraph({
+      title,
+      description,
+      path,
+      imageUrl: art.images[0],
+    }),
+    twitter: buildTwitterCard({
+      title,
+      description,
+      imageUrl: art.images[0],
+    }),
   }
 }
+
 
 export default async function ArtworkPage({ params }: Props) {
   const { slug } = await params
@@ -200,7 +221,7 @@ export default async function ArtworkPage({ params }: Props) {
               <div className="relative aspect-[4/3] rounded-2xl overflow-hidden group cursor-zoom-in">
                 <Image
                   src={art.images[0]}
-                  alt={`${art.title} — ${art.medium} by Niomi`}
+                  alt={`${art.title} — ${art.medium} by Niomi Gada`}
                   fill
                   className="object-cover"
                   sizes="(max-width: 1024px) 100vw, 50vw"
@@ -213,12 +234,12 @@ export default async function ArtworkPage({ params }: Props) {
               {art.images.slice(1).map((img, i) => (
                 <div key={i} className="relative aspect-video rounded-xl overflow-hidden">
                   <Image
-                    src={img}
-                    alt={`${art.title} — detail ${i + 2}`}
-                    fill
-                    className="object-cover"
-                    sizes="(max-width: 1024px) 100vw, 50vw"
-                  />
+                     src={img}
+                     alt={`${art.title} — detail ${i + 2}`}
+                     fill
+                     className="object-cover"
+                     sizes="(max-width: 1024px) 100vw, 50vw"
+                   />
                 </div>
               ))}
             </div>
@@ -271,6 +292,38 @@ export default async function ArtworkPage({ params }: Props) {
           </div>
         </div>
       </div>
+
+      {/* Structured Schemas */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(
+            getBreadcrumbSchema([
+              { name: 'Home', path: '/' },
+              { name: 'Gallery', path: '/gallery' },
+              { name: art.title, path: `/gallery/${art.slug}` },
+            ])
+          ),
+        }}
+      />
+      {art.price && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(
+              getProductSchema({
+                name: art.title,
+                image: art.images[0],
+                description: art.description,
+                sku: `ART-${art.slug.toUpperCase()}`,
+                price: art.price,
+                availability: art.available ? 'InStock' : 'OutOfStock',
+                path: `/gallery/${art.slug}`,
+              })
+            ),
+          }}
+        />
+      )}
     </article>
   )
 }

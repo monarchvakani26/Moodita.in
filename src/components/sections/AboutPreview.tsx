@@ -26,7 +26,7 @@ const TIMELINE = [
   {
     year: 'Now',
     title: 'Creator in Full',
-    desc: 'Moodita is the convergence of all these worlds — a digital home for everything that makes Niomi, Niomi.',
+    desc: 'Moodita is the convergence of all these worlds — a digital home for everything that makes Niomi Gada, Niomi Gada.',
   },
 ]
 
@@ -47,7 +47,7 @@ export function AboutPreview() {
           <RevealImage className="relative rounded-3xl overflow-hidden aspect-[4/5] max-w-md mx-auto lg:mx-0">
             <Image
               src="https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=800&q=80&auto=format"
-              alt="Niomi — advocate, artist, and storyteller"
+              alt="Niomi Gada — advocate, artist, and storyteller"
               fill
               className="object-cover"
               sizes="(max-width: 768px) 100vw, 50vw"
@@ -60,7 +60,7 @@ export function AboutPreview() {
               <p className="font-serif text-sm italic text-ink leading-snug">
                 &ldquo;I believe every story has the power to change a mind — or soften one.&rdquo;
               </p>
-              <p className="font-sans text-[10px] text-ink-muted mt-1 tracking-wide">— Niomi</p>
+              <p className="font-sans text-[10px] text-ink-muted mt-1 tracking-wide">— Niomi Gada</p>
             </div>
           </RevealImage>
 
@@ -69,7 +69,7 @@ export function AboutPreview() {
             <div>
               <RevealText>
                 <p className="font-sans text-xs text-ink-muted tracking-[0.25em] uppercase mb-4">
-                  About Niomi
+                  About Niomi Gada
                 </p>
               </RevealText>
               <RevealText delay={0.1}>
@@ -83,7 +83,7 @@ export function AboutPreview() {
               </RevealText>
               <RevealText delay={0.2}>
                 <p className="font-sans text-fluid-base text-ink-muted leading-[1.8] max-w-prose">
-                  By day, Niomi fights for justice in courtrooms. By evening, she paints 
+                  By day, Niomi Gada fights for justice in courtrooms. By evening, she paints 
                   worlds into existence on canvas. Late at night, she writes poems about 
                   kindness, cooks recipes from memory, and maps the places she&apos;s wandered. 
                   Moodita is where all of these lives meet.
@@ -92,7 +92,7 @@ export function AboutPreview() {
             </div>
 
             {/* Timeline */}
-            <div className="space-y-0" role="list" aria-label="Niomi's journey">
+            <div className="space-y-0" role="list" aria-label="Niomi Gada's journey">
               {TIMELINE.map((item, i) => (
                 <TimelineItem key={item.year} {...item} index={i} />
               ))}
@@ -102,7 +102,7 @@ export function AboutPreview() {
               <Link
                 href="/about"
                 className="inline-flex items-center gap-2 font-sans text-sm text-olive hover:text-terracotta transition-colors duration-200 group"
-                aria-label="Read Niomi's full story"
+                aria-label="Read Niomi Gada's full story"
               >
                 Read the full story
                 <ArrowUpRight

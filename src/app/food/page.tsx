@@ -3,11 +3,15 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { RevealText } from '@/components/primitives/RevealText'
 import { ArrowUpRight, Clock } from 'lucide-react'
+import { siteConfig } from '@/lib/site-config'
+import { getBreadcrumbSchema } from '@/lib/schema'
 
 export const metadata: Metadata = {
-  title: 'Food Journal',
-  description:
-    'Beautiful recipes, kitchen stories, and cooking notes from Niomi\'s food journal.',
+  title: 'Food Journal | Moodita',
+  description: 'Beautiful recipes, kitchen stories, and cooking notes from Niomi Gada\'s food journal.',
+  alternates: {
+    canonical: '/food',
+  },
 }
 
 const RECIPES = [
@@ -162,6 +166,19 @@ export default function FoodPage() {
           </div>
         </div>
       </div>
+
+      {/* Structured Breadcrumbs Schema */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(
+            getBreadcrumbSchema([
+              { name: 'Home', path: '/' },
+              { name: 'Food', path: '/food' },
+            ])
+          ),
+        }}
+      />
     </div>
   )
 }

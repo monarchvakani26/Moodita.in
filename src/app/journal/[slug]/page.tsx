@@ -3,7 +3,10 @@ import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import Image from 'next/image'
 import { Clock, ArrowLeft, Share2, Bookmark } from 'lucide-react'
-import { formatDate, readingTime } from '@/lib/utils'
+import { formatDate } from '@/lib/utils'
+import { siteConfig } from '@/lib/site-config'
+import { buildOpenGraph, buildTwitterCard } from '@/lib/seo'
+import { getBreadcrumbSchema, getArticleSchema } from '@/lib/schema'
 
 // Sample post data — replace with Prisma query in Phase 6
 const POSTS: Record<string, {
@@ -149,15 +152,34 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
   const post = POSTS[slug]
   if (!post) return { title: 'Not Found' }
+
+  const title = `${post.title} | Moodita`
+  const description = post.excerpt
+  const path = `/journal/${slug}`
+
   return {
-    title: post.title,
-    description: post.excerpt,
-    openGraph: {
-      title: post.title,
-      description: post.excerpt,
-      images: [{ url: post.coverImage, width: 1600, height: 900 }],
+    title,
+    description,
+    alternates: {
+      canonical: path,
     },
+    openGraph: buildOpenGraph({
+      title,
+      description,
+      path,
+      type: 'article',
+      imageUrl: post.coverImage,
+    }),
+    twitter: buildTwitterCard({
+      title,
+      description,
+      imageUrl: post.coverImage,
+    }),
   }
+}
+
+function getReadingTime(text: string): number {
+  return Math.max(1, Math.round(text.split(/\s+/).length / 200));
 }
 
 export default async function JournalPost({ params }: Props) {
@@ -165,94 +187,196 @@ export default async function JournalPost({ params }: Props) {
   const post = POSTS[slug]
   if (!post) notFound()
 
-  const rt = readingTime(post.content)
+  const rt = getReadingTime(post.content)
+
+  // Auto-generate Table of Contents from h2 and h3 markdown tags
+  const headingMatches = Array.from(post.content.matchAll(/^(##|###) (.+)$/gm));
+  const toc = headingMatches.map((m) => {
+    const text = m[2];
+    const id = text.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    const level = m[1] === '##' ? 2 : 3;
+    return { text, id, level };
+  });
+
+  // Calculate related posts sharing the same category
+  const relatedPosts = Object.values(POSTS)
+    .filter(p => p.slug !== post.slug && p.category === post.category)
+    .slice(0, 2);
 
   return (
     <article className="pt-[var(--nav-height)] pb-24 bg-cream">
       {/* Hero image */}
-      <div className="relative h-[55vh] md:h-[65vh] overflow-hidden">
+      <div className="relative h-[50vh] md:h-[60vh] overflow-hidden">
         <Image
           src={post.coverImage}
           alt={post.title}
           fill
-          className="object-cover"
+          className="object-cover animate-fade-in"
           sizes="100vw"
           priority
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-cream via-cream/30 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-cream via-cream/35 to-transparent" />
       </div>
 
-      {/* Content */}
-      <div className="section-padding -mt-24 relative z-10">
-        <div className="max-w-2xl mx-auto">
+      {/* Main Grid Content */}
+      <div className="section-padding -mt-20 relative z-10">
+        <div className="page-container max-w-6xl grid grid-cols-1 lg:grid-cols-12 gap-12">
+          
+          {/* Left Column — Sticky Table of Contents (Desktop only) */}
+          <aside className="hidden lg:block lg:col-span-3 sticky top-28 h-fit max-h-[75vh] overflow-y-auto pr-4 border-r border-border/60">
+            <p className="font-sans text-[10px] text-ink-muted tracking-[0.2em] uppercase mb-4">Table of Contents</p>
+            {toc.length === 0 ? (
+              <p className="font-sans text-xs text-ink-muted italic">No sections in this entry.</p>
+            ) : (
+              <nav className="space-y-3" aria-label="Table of Contents">
+                {toc.map((item) => (
+                  <a
+                    key={item.id}
+                    href={`#${item.id}`}
+                    className={`block font-sans text-xs text-ink-soft hover:text-terracotta transition-colors duration-200 leading-relaxed ${
+                      item.level === 3 ? 'pl-4 border-l border-border/40' : 'font-medium'
+                    }`}
+                  >
+                    {item.text}
+                  </a>
+                ))}
+              </nav>
+            )}
+          </aside>
 
-          {/* Meta */}
-          <div className="flex items-center gap-3 mb-6">
-            <span className="font-sans text-[10px] text-terracotta tracking-[0.15em] uppercase font-medium">{post.category}</span>
-            <span className="w-1 h-1 rounded-full bg-border" />
-            <span className="font-sans text-[10px] text-ink-muted">{formatDate(post.date)}</span>
-            <span className="flex items-center gap-1 font-sans text-[10px] text-ink-muted">
-              <Clock size={10} /> {rt} min read
-            </span>
-          </div>
-
-          {/* Title */}
-          <h1 className="font-display text-fluid-3xl text-ink leading-tight tracking-tight mb-6">
-            {post.title}
-          </h1>
-
-          {/* Excerpt */}
-          <p className="font-serif text-fluid-lg text-ink-muted italic leading-relaxed mb-8 border-l-2 border-terracotta pl-5">
-            {post.excerpt}
-          </p>
-
-          {/* Actions */}
-          <div className="flex items-center gap-3 pb-8 mb-8 border-b border-border">
-            <Link href="/journal" className="flex items-center gap-1.5 font-sans text-xs text-ink-muted hover:text-ink transition-colors">
-              <ArrowLeft size={13} /> Back to Journal
-            </Link>
-            <div className="flex-1" />
-            <button className="flex items-center gap-1.5 font-sans text-xs text-ink-muted hover:text-ink transition-colors" aria-label="Save to bookmarks">
-              <Bookmark size={14} strokeWidth={1.5} /> Save
-            </button>
-            <button className="flex items-center gap-1.5 font-sans text-xs text-ink-muted hover:text-ink transition-colors" aria-label="Share post">
-              <Share2 size={14} strokeWidth={1.5} /> Share
-            </button>
-          </div>
-
-          {/* Body — MDX content rendered as editorial prose */}
-          <div className="prose-editorial"
-            dangerouslySetInnerHTML={{ __html: markdownToBasicHtml(post.content) }}
-          />
-
-          {/* Author signature */}
-          <div className="mt-16 pt-8 border-t border-border flex items-center gap-4">
-            <div className="relative w-12 h-12 rounded-full overflow-hidden">
-              <Image
-                src="https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=96&q=80"
-                alt="Niomi"
-                fill
-                className="object-cover"
-                sizes="48px"
-              />
+          {/* Center Column — Main Post prose */}
+          <div className="lg:col-span-6 max-w-2xl mx-auto w-full">
+            {/* Meta */}
+            <div className="flex items-center gap-3 mb-6">
+              <span className="font-sans text-[10px] text-terracotta tracking-[0.15em] uppercase font-medium">{post.category}</span>
+              <span className="w-1 h-1 rounded-full bg-border" />
+              <span className="font-sans text-[10px] text-ink-muted">{formatDate(post.date)}</span>
+              <span className="flex items-center gap-1 font-sans text-[10px] text-ink-muted">
+                <Clock size={10} /> {rt} min read
+              </span>
             </div>
-            <div>
-              <p className="font-display text-sm text-ink">Niomi</p>
-              <p className="font-sans text-xs text-ink-muted">Advocate · Artist · Storyteller</p>
+
+            {/* Title */}
+            <h1 className="font-display text-fluid-3xl text-ink leading-tight tracking-tight mb-6">
+              {post.title}
+            </h1>
+
+            {/* Excerpt */}
+            <p className="font-serif text-fluid-lg text-ink-muted italic leading-relaxed mb-8 border-l-2 border-terracotta pl-5">
+              {post.excerpt}
+            </p>
+
+            {/* Actions */}
+            <div className="flex items-center gap-3 pb-6 mb-8 border-b border-border">
+              <Link href="/journal" className="flex items-center gap-1.5 font-sans text-xs text-ink-muted hover:text-ink transition-colors">
+                <ArrowLeft size={13} /> Back to Journal
+              </Link>
+              <div className="flex-1" />
+              <button className="flex items-center gap-1.5 font-sans text-xs text-ink-muted hover:text-ink transition-colors" aria-label="Save to bookmarks">
+                <Bookmark size={14} strokeWidth={1.5} /> Save
+              </button>
+              <button className="flex items-center gap-1.5 font-sans text-xs text-ink-muted hover:text-ink transition-colors" aria-label="Share post">
+                <Share2 size={14} strokeWidth={1.5} /> Share
+              </button>
+            </div>
+
+            {/* Body */}
+            <div
+              className="prose-editorial"
+              dangerouslySetInnerHTML={{ __html: markdownToBasicHtml(post.content) }}
+            />
+
+            {/* Author Profile card */}
+            <div className="mt-16 pt-8 border-t border-border flex items-center gap-4">
+              <div className="relative w-12 h-12 rounded-full overflow-hidden">
+                <Image
+                  src="https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=96&q=80"
+                  alt="Niomi Gada"
+                  fill
+                  className="object-cover"
+                  sizes="48px"
+                />
+              </div>
+              <div>
+                <p className="font-display text-sm text-ink">Niomi Gada</p>
+                <p className="font-sans text-xs text-ink-muted">Advocate · Artist · Storyteller</p>
+              </div>
             </div>
           </div>
+
+          {/* Right Column — Related Posts (Desktop only) */}
+          <aside className="hidden lg:block lg:col-span-3 sticky top-28 h-fit space-y-6">
+            <p className="font-sans text-[10px] text-ink-muted tracking-[0.2em] uppercase">Related Entries</p>
+            {relatedPosts.length === 0 ? (
+              <p className="font-sans text-xs text-ink-muted italic">No related entries found.</p>
+            ) : (
+              <div className="space-y-6">
+                {relatedPosts.map(p => (
+                  <Link key={p.slug} href={`/journal/${p.slug}`} className="group block space-y-2">
+                    <div className="relative aspect-video w-full rounded-xl overflow-hidden bg-paper">
+                      <Image
+                        src={p.coverImage}
+                        alt={p.title}
+                        fill
+                        className="object-cover group-hover:scale-105 transition-transform duration-300"
+                        sizes="200px"
+                      />
+                    </div>
+                    <h4 className="font-serif text-xs text-ink group-hover:text-terracotta transition-colors leading-snug">
+                      {p.title}
+                    </h4>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </aside>
+
         </div>
       </div>
+
+      {/* JSON-LD Schema scripts */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(
+            getBreadcrumbSchema([
+              { name: 'Home', path: '/' },
+              { name: 'Journal', path: '/journal' },
+              { name: post.title, path: `/journal/${post.slug}` },
+            ])
+          ),
+        }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(
+            getArticleSchema({
+              headline: post.title,
+              description: post.excerpt,
+              image: post.coverImage,
+              datePublished: post.date,
+              path: `/journal/${post.slug}`,
+            })
+          ),
+        }}
+      />
     </article>
   )
 }
 
-// Very basic markdown-to-HTML (replaced by MDX in Phase 6)
+// Custom markdown-to-HTML parser with custom ID anchors for Table of Contents links
 function markdownToBasicHtml(md: string): string {
   return md
     .trim()
-    .replace(/^## (.+)$/gm, '<h2 class="font-display text-fluid-xl text-ink mt-10 mb-4">$1</h2>')
-    .replace(/^### (.+)$/gm, '<h3 class="font-display text-fluid-lg text-ink mt-8 mb-3">$1</h3>')
+    .replace(/^## (.+)$/gm, (_, p1) => {
+      const id = p1.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+      return `<h2 id="${id}" class="font-display text-fluid-xl text-ink mt-10 mb-4">${p1}</h2>`;
+    })
+    .replace(/^### (.+)$/gm, (_, p1) => {
+      const id = p1.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+      return `<h3 id="${id}" class="font-display text-fluid-lg text-ink mt-8 mb-3">${p1}</h3>`;
+    })
     .replace(/\*\*(.+?)\*\*/g, '<strong class="font-medium text-ink">$1</strong>')
     .replace(/\*(.+?)\*/g, '<em>$1</em>')
     .replace(/^---$/gm, '<hr class="border-border my-10" />')

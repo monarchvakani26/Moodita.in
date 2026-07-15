@@ -3,6 +3,9 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { ArrowLeft, MapPin } from 'lucide-react'
+import { siteConfig } from '@/lib/site-config'
+import { buildOpenGraph, buildTwitterCard } from '@/lib/seo'
+import { getBreadcrumbSchema } from '@/lib/schema'
 
 const TRAVEL_ENTRIES: Record<string, {
   slug: string
@@ -98,10 +101,29 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
   const entry = TRAVEL_ENTRIES[slug]
   if (!entry) return { title: 'Not Found' }
+
+  const title = `${entry.title} | Travel Diary`
+  const description = entry.description
+  const path = `/travel/${slug}`
+
   return {
-    title: `${entry.title} — Travel Diary`,
-    description: entry.description,
-    openGraph: { images: [{ url: entry.coverImage }] },
+    title,
+    description,
+    alternates: {
+      canonical: path,
+    },
+    openGraph: buildOpenGraph({
+      title,
+      description,
+      path,
+      type: 'article',
+      imageUrl: entry.coverImage,
+    }),
+    twitter: buildTwitterCard({
+      title,
+      description,
+      imageUrl: entry.coverImage,
+    }),
   }
 }
 
@@ -167,6 +189,20 @@ export default async function TravelEntryPage({ params }: Props) {
           )}
         </div>
       </div>
+
+      {/* Structured Schemas */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(
+            getBreadcrumbSchema([
+              { name: 'Home', path: '/' },
+              { name: 'Travel', path: '/travel' },
+              { name: entry.title, path: `/travel/${entry.slug}` },
+            ])
+          ),
+        }}
+      />
     </article>
   )
 }

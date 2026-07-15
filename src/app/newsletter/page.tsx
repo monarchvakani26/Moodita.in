@@ -3,11 +3,16 @@ import Link from 'next/link'
 import { RevealText } from '@/components/primitives/RevealText'
 import { MagneticButton } from '@/components/primitives/MagneticButton'
 import { Mail, Check } from 'lucide-react'
+import { siteConfig } from '@/lib/site-config'
+import { getBreadcrumbSchema } from '@/lib/schema'
 
 export const metadata: Metadata = {
-  title: 'Newsletter — Monthly Letters from Niomi',
+  title: 'Newsletter | Moodita',
   description:
-    'Subscribe to receive monthly letters from Niomi — art updates, new recipes, travel stories, and quiet reflections.',
+    'Subscribe to receive monthly letters from Niomi Gada — art updates, new recipes, travel stories, and quiet reflections.',
+  alternates: {
+    canonical: '/newsletter',
+  },
 }
 
 const RECENT_LETTERS = [
@@ -33,13 +38,13 @@ export default function NewsletterPage() {
           <RevealText delay={0.1}>
             <h1 className="font-display text-fluid-4xl text-ink leading-tight tracking-tight mb-6">
               Letters from<br />
-              <span className="text-terracotta italic">Niomi.</span>
+              <span className="text-terracotta italic">Niomi Gada.</span>
             </h1>
           </RevealText>
 
           <RevealText delay={0.2}>
             <p className="font-sans text-fluid-base text-ink-muted leading-[1.8] max-w-xl mx-auto mb-12">
-              Once a month, Niomi writes a letter — about a new painting, a recipe discovered by accident, 
+              Once a month, Niomi Gada writes a letter — about a new painting, a recipe discovered by accident, 
               a place she wandered, a thought she couldn&apos;t shake. It arrives in your inbox like a note from a friend.
             </p>
           </RevealText>
@@ -129,6 +134,19 @@ export default function NewsletterPage() {
           </div>
         </div>
       </div>
+
+      {/* Structured Breadcrumbs Schema */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(
+            getBreadcrumbSchema([
+              { name: 'Home', path: '/' },
+              { name: 'Newsletter', path: '/newsletter' },
+            ])
+          ),
+        }}
+      />
     </div>
   )
 }
