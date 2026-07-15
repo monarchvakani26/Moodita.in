@@ -3,7 +3,7 @@ import { Instagram, Mail, Linkedin, ArrowUpRight } from 'lucide-react'
 
 const FOOTER_LINKS = {
   explore: [
-    { label: 'About Niomi', href: '/about' },
+    { label: 'About Niomi Gada', href: '/about' },
     { label: 'Creative Gallery', href: '/gallery' },
     { label: 'Journal', href: '/journal' },
     { label: 'Writing', href: '/writing' },
@@ -43,7 +43,7 @@ export function Footer() {
               Kindness Above Everything
             </p>
             <p className="font-sans text-xs text-cream/50 leading-relaxed max-w-xs">
-              A digital home for Niomi — advocate, artist, writer, foodie, traveller, and storyteller.
+              A digital home for Niomi Gada — advocate, artist, writer, foodie, traveller, and storyteller.
             </p>
 
             {/* Social icons */}
@@ -78,7 +78,7 @@ export function Footer() {
         <div className="page-container section-padding py-10">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
             <div>
-              <p className="font-display text-lg text-cream">Receive monthly letters from Niomi.</p>
+              <p className="font-display text-lg text-cream">Receive monthly letters from Niomi Gada.</p>
               <p className="font-sans text-xs text-cream/50 mt-1">Art updates, recipes, travel stories, and thoughts.</p>
             </div>
             <Link
@@ -96,7 +96,7 @@ export function Footer() {
       <div className="border-t border-cream/10">
         <div className="page-container section-padding py-6">
           <div className="flex flex-col md:flex-row items-center justify-between gap-3 text-xs text-cream/40 font-sans">
-            <p>© {year} Moodita by Niomi. All rights reserved.</p>
+            <p>© {year} Moodita by Niomi Gada. All rights reserved. <span className="mx-2 opacity-30">|</span> Website designed by Monarch Vakani</p>
             <div className="flex gap-6">
               <Link href="/privacy" className="hover:text-cream/70 transition-colors">Privacy</Link>
               <Link href="/terms" className="hover:text-cream/70 transition-colors">Terms</Link>
